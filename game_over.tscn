@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3 uid="uid://3smya38m258b"]
+
+[ext_resource type="Script" path="res://game_over.gd" id="1_53jsi"]
+
+[node name="GameOverScene" type="CanvasLayer"]
+script = ExtResource("1_53jsi")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+offset_right = 720.0
+offset_bottom = 1080.0
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.756863, 0, 0, 1)
+theme_override_font_sizes/font_size = 84
+text = "YOU DIED"
+horizontal_alignment = 1
+
+[node name="AgainButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Try Again"
+
+[node name="QuitButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Quit"
+
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/AgainButton" to="." method="_on_again_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

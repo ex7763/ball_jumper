@@ -1,0 +1,67 @@
+[gd_scene load_steps=9 format=3 uid="uid://2lv76u5mbrvw"]
+
+[ext_resource type="Script" path="res://scene.gd" id="1_rcve6"]
+[ext_resource type="Script" path="res://AIController2D.gd" id="2_mfmpb"]
+[ext_resource type="Texture2D" uid="uid://c07t02p6sct46" path="res://images/7568_cr.jpg" id="2_rs7rc"]
+[ext_resource type="Script" path="res://player.gd" id="3_7cbyw"]
+[ext_resource type="Texture2D" uid="uid://cuwln5w2q3ttu" path="res://images/Hooded_Protagonist.png" id="3_u6h4h"]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_pl4r3"]
+b = Vector2(20, 0)
+
+[sub_resource type="Animation" id="Animation_iufq2"]
+resource_name = "idle"
+length = 0.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [0, 1]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_8ue1f"]
+_data = {
+"idle": SubResource("Animation_iufq2")
+}
+
+[node name="Scene" type="Node2D"]
+script = ExtResource("1_rcve6")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_top = -3.0
+offset_right = 40.0
+offset_bottom = 37.0
+texture = ExtResource("2_rs7rc")
+metadata/_edit_lock_ = true
+
+[node name="AIController2D" type="Node" parent="."]
+script = ExtResource("2_mfmpb")
+
+[node name="player" type="CharacterBody2D" parent="."]
+position = Vector2(344, 675)
+script = ExtResource("3_7cbyw")
+
+[node name="Sprite2D" type="Sprite2D" parent="player"]
+scale = Vector2(3, 3)
+texture = ExtResource("3_u6h4h")
+hframes = 8
+vframes = 9
+frame = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="player"]
+position = Vector2(-4, 42)
+shape = SubResource("SegmentShape2D_pl4r3")
+debug_color = Color(0, 0.6, 0.694118, 0.419608)
+metadata/_edit_group_ = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="player"]
+libraries = {
+"": SubResource("AnimationLibrary_8ue1f")
+}
