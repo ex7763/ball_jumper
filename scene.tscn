@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://2lv76u5mbrvw"]
+[gd_scene load_steps=10 format=3 uid="uid://2lv76u5mbrvw"]
 
 [ext_resource type="Script" path="res://scene.gd" id="1_rcve6"]
 [ext_resource type="Script" path="res://AIController2D.gd" id="2_mfmpb"]
 [ext_resource type="Texture2D" uid="uid://c07t02p6sct46" path="res://images/7568_cr.jpg" id="2_rs7rc"]
 [ext_resource type="Script" path="res://player.gd" id="3_7cbyw"]
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="3_cgy1q"]
 [ext_resource type="Texture2D" uid="uid://cuwln5w2q3ttu" path="res://images/Hooded_Protagonist.png" id="3_u6h4h"]
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_pl4r3"]
@@ -41,7 +42,7 @@ offset_bottom = 37.0
 texture = ExtResource("2_rs7rc")
 metadata/_edit_lock_ = true
 
-[node name="AIController2D" type="Node" parent="."]
+[node name="AIController2D" type="Node" parent="." groups=["AGENT"]]
 script = ExtResource("2_mfmpb")
 
 [node name="player" type="CharacterBody2D" parent="."]
@@ -65,3 +66,6 @@ metadata/_edit_group_ = true
 libraries = {
 "": SubResource("AnimationLibrary_8ue1f")
 }
+
+[node name="Sync" type="Node" parent="."]
+script = ExtResource("3_cgy1q")

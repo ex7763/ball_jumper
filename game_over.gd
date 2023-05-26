@@ -17,7 +17,7 @@ func _on_again_button_pressed():
 	# get_tree().get_root().add_child(game_scene.instantiate())
 
 	# get_tree().get_root().remove_child(self)
-	queue_free()
+	# queue_free()
 	get_node("/root/Scene").status = "alive"
 
 	# var node = get_node("/root/Scene")

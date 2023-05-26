@@ -6,6 +6,8 @@ extends Node
 
 @onready var start_time = Time.get_ticks_msec()
 
+const ENABLE = true
+
 const MAJOR_VERSION := "0"
 const MINOR_VERSION := "3" 
 const DEFAULT_PORT := "11008"
@@ -29,11 +31,12 @@ var _obs_space : Dictionary
 # Called when the node enters the scene tree for the first time.
 
 func _ready():
-	await get_tree().root.ready
-	get_tree().set_pause(true) 
-	_initialize()
-	await get_tree().create_timer(1.0).timeout
-	get_tree().set_pause(false) 
+	if ENABLE:
+		await get_tree().root.ready
+		get_tree().set_pause(true)
+		_initialize()
+		await get_tree().create_timer(1.0).timeout
+		get_tree().set_pause(false)
 	
 func _initialize():
 	_get_agents()
