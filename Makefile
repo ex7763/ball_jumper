@@ -1,12 +1,18 @@
 # ENV_PATH = ".\bin\ball_jumper.console.exe"
 ENV_PATH = "./bin/ball_jumper.app/Contents/MacOS/ball_jumper"
 ENV_PATH = "./bin/ball_jumper.app"
+ENV_PATH = "./bin/ball_jumper.x86_64"
 
 # SPEEDUP = 1
 # SPEEDUP = 2
 SPEEDUP = 8
 
-VIZ = "True"
+VIZ = True
+# VIZ = False
+
+GPU = True
+
+NUM_ENVS = 64
 
 install:
 	pip install godot-rl
@@ -14,11 +20,11 @@ install:
 train:
 	python ./rl/clean_rl.py --env_path $(ENV_PATH) \
 			--speedup $(SPEEDUP) \
-			--cuda False \
+			--cuda $(GPU) \
 			--viz $(VIZ) \
 			--num-minibatches 256 \
 			--update-epochs 5 \
-			--num-envs 8 \
+			--num-envs $(NUM_ENVS) \
 			--num-steps 1024
 
 c51:

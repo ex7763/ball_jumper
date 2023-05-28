@@ -1,9 +1,9 @@
 [gd_scene load_steps=2 format=3 uid="uid://3smya38m258b"]
 
-[ext_resource type="Script" path="res://game_over.gd" id="1_p5w60"]
+[ext_resource type="Script" path="res://game_over.gd" id="1_1y467"]
 
 [node name="GameOverScene" type="CanvasLayer"]
-script = ExtResource("1_p5w60")
+script = ExtResource("1_1y467")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
 offset_right = 720.0

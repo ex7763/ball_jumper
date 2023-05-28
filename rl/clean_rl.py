@@ -13,6 +13,9 @@ import torch.optim as optim
 from torch.distributions.normal import Normal
 from torch.utils.tensorboard import SummaryWriter
 from godot_rl.wrappers.clean_rl_wrapper import CleanRLGodotEnv
+from godot_rl.wrappers.stable_baselines_wrapper import StableBaselinesGodotEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 
 
 def parse_args():
@@ -46,7 +49,7 @@ def parse_args():
         help="total timesteps of the experiments")
     parser.add_argument("--learning-rate", type=float, default=3e-4,
         help="the learning rate of the optimizer")
-    parser.add_argument("--num-envs", type=int, default=1,
+    parser.add_argument("--num-envs", type=int, default=4,
         help="the number of parallel game environments")
     parser.add_argument("--num-steps", type=int, default=32,
         help="the number of steps to run in each environment per policy rollout")
@@ -99,7 +102,7 @@ class Agent(nn.Module):
         super().__init__()
         self.critic = nn.Sequential(
             layer_init(
-                nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)
+                nn.Linear(np.array(envs.observation_space.shape[0]).prod(), 64)
             ),
             nn.Tanh(),
             layer_init(nn.Linear(64, 64)),
@@ -108,17 +111,17 @@ class Agent(nn.Module):
         )
         self.actor_mean = nn.Sequential(
             layer_init(
-                nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)
+                nn.Linear(np.array(envs.observation_space.shape[0]).prod(), 64)
             ),
             nn.Tanh(),
             layer_init(nn.Linear(64, 64)),
             nn.Tanh(),
             layer_init(
-                nn.Linear(64, np.prod(envs.single_action_space.shape)), std=0.01
+                nn.Linear(64, np.prod(envs.action_space.shape)), std=0.01
             ),
         )
         self.actor_logstd = nn.Parameter(
-            torch.zeros(1, np.prod(envs.single_action_space.shape))
+            torch.zeros(1, np.prod(envs.action_space.shape))
         )
 
     def get_value(self, x):
@@ -167,20 +170,42 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed)
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
-    # device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-    device = torch.device("mps" if args.cuda else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    # device = torch.device("mps" if args.cuda else "cpu")
 
     # env setup
     print("env setup")
-    envs = env = CleanRLGodotEnv(
+    #  envs = env = CleanRLGodotEnv(
+    #      env_path=args.env_path,
+    #      show_window=args.viz,
+    #      speedup=args.speedup,
+    #      convert_action_space=True,
+    #  )  # Godot envs are already vectorized
+    # envs = SubprocVecEnv([CleanRLGodotEnv(
+    #envs = VecEnv([CleanRLGodotEnv(
+    #      env_path=args.env_path,
+    #      show_window=args.viz if i == 0 else False,
+    #      speedup=args.speedup,
+    #      action_repeat=None,
+    #      convert_action_space=True,
+    #      port=11008 + i,
+    #  ) for i in range(args.num_envs])
+    envs = StableBaselinesGodotEnv(
         env_path=args.env_path,
         show_window=args.viz,
         speedup=args.speedup,
-        convert_action_space=True,
-    )  # Godot envs are already vectorized
+        action_repeat=None,
+    )
+
+    print("After convert action space")
+    print(f"observation space: {envs.observation_space}")
+    envs.env.observation_space = envs.observation_space['obs']
+    print(f"observation space: {envs.observation_space.shape}")
+    print(f"action space: {envs.action_space}")
+    print(f"num_envs: {args.num_envs}")
     print("env setup finish")
-    # assert isinstance(envs.single_action_space, gym.spaces.Box), "only continuous action space is supported"
-    args.num_envs = envs.num_envs
+    # envs.num_envs = args.num_envs
+
     args.batch_size = int(args.num_envs * args.num_steps)
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
     agent = Agent(envs).to(device)
@@ -188,10 +213,10 @@ if __name__ == "__main__":
 
     # ALGO Logic: Storage setup
     obs = torch.zeros(
-        (args.num_steps, args.num_envs) + envs.single_observation_space.shape
+        (args.num_steps, args.num_envs) + envs.observation_space.shape
     ).to(device)
     actions = torch.zeros(
-        (args.num_steps, args.num_envs) + envs.single_action_space.shape
+        (args.num_steps, args.num_envs) + envs.action_space.shape
     ).to(device)
     logprobs = torch.zeros((args.num_steps, args.num_envs)).to(device)
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
@@ -202,7 +227,9 @@ if __name__ == "__main__":
     print("start the game")
     global_step = 0
     start_time = time.time()
-    next_obs, _ = envs.reset(seed=args.seed)
+    # next_obs, _ = envs.reset(seed=args.seed)
+    next_obs = envs.reset()
+    next_obs = next_obs['obs']
     next_obs = torch.Tensor(next_obs).to(device)
     next_done = torch.zeros(args.num_envs).to(device)
     num_updates = args.total_timesteps // args.batch_size
@@ -234,12 +261,15 @@ if __name__ == "__main__":
             # print(action)
 
             # TRY NOT TO MODIFY: execute the game and log data.
-            next_obs, reward, terminated, truncated, infos = envs.step(
+            # next_obs, reward, terminated, truncated, infos = envs.step(
+            next_obs, reward, terminated, infos = envs.step(
                 action.cpu().numpy()
                 # np.array([[1.0, np.random.random() - 0.5, -1.0]])  # random jump
                 # np.array([[1.0, -1.0, -1.0]])  # right
             )
-            done = np.logical_or(terminated, truncated)
+            next_obs = next_obs['obs']
+            # done = np.logical_or(terminated, truncated)
+            done = terminated
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(
                 done
@@ -274,9 +304,9 @@ if __name__ == "__main__":
             returns = advantages + values
 
         # flatten the batch
-        b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
+        b_obs = obs.reshape((-1,) + envs.observation_space.shape)
         b_logprobs = logprobs.reshape(-1)
-        b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
+        b_actions = actions.reshape((-1,) + envs.action_space.shape)
         b_advantages = advantages.reshape(-1)
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
