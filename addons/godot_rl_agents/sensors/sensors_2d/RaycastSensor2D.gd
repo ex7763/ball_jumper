@@ -93,7 +93,7 @@ func _physics_process(delta: float) -> void:
 		
 func get_observation() -> Array:
 	if len(self._obs) == 0:
-		print("obs was null, forcing raycast update")
+		# print("obs was null, forcing raycast update")
 		return self.calculate_raycasts()
 	return self._obs
 	

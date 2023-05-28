@@ -9,6 +9,7 @@ const Ball = preload('res://ball_0.tscn')
 var status = "alive"
 var ball = []
 var game_over_scene
+var score = 0
 
 func _ready():
 	print($player.position)
@@ -21,7 +22,8 @@ func _process(delta):
 	var viewport_height = ProjectSettings.get_setting("display/window/size/viewport_height")
 	var viewport_width = ProjectSettings.get_setting("display/window/size/viewport_width")
 	
-	if ai_controller.needs_reset:
+	if not ai_controller.move_action  == null \
+		and ai_controller.needs_reset:
 		# print("ai needs_reset")
 		get_node("/root/Scene").status = "alive"
 		if game_over_scene:
@@ -34,34 +36,23 @@ func _process(delta):
 	# print("get rl action: ", ai_controller.move_action)
 
 	if status == "alive":
-		if ai_controller.move_action:
-			if ai_controller.move_action == 0:
-				#print("right")
-				$player.move_right()
-			elif ai_controller.move_action == 1:
-				#print("left")
-				$player.move_left()
-			elif ai_controller.move_action == 2:
-				#print("jump")
-				$player.move_jump()
-		
 		if len(ball) == 0:
 			ball.append(Ball.instantiate())
 			ball[-1].position.x = $player.position.x
-			ball[-1].position.y = $player.position.y + 200
+			ball[-1].position.y = $player.position.y + 150
 			get_parent().add_child(ball[-1])
 
 		while len(ball) < num_balls:
 			ball.append(Ball.instantiate())
 			ball[-1].position.x = ball[-2].position.x + \
-					((randf()-0.5) * viewport_width)
+					(((randf()-0.5) * 0.6) * viewport_width)
 			ball[-1].position.x = min(max(ball[-1].position.x, 0), viewport_width)
 			if ball[-1].position.x == viewport_width:
 				ball[-1].position.x = ball[-2].position.x + \
-						((-0.5 * randf()) * viewport_width)
+						(((-0.5 * randf()) * 0.6) * viewport_width)
 			if ball[-1].position.x == 0:
 				ball[-1].position.x = ball[-2].position.x + \
-						((+0.5 * randf()) * viewport_width)
+						(((+0.5 * randf()) * 0.6) * viewport_width)
 			ball[-1].position.y = ball[-2].position.y - randf() * 50 - 100
 			# ball[-1].position.y = randi() % ProjectSettings.get_setting("display/window/size/viewport_height")
 			get_parent().add_child(ball[-1])
@@ -79,9 +70,10 @@ func _process(delta):
 
 		check_died()
 		if status == "alive":
-			ai_controller.reward = 1
+			ai_controller.reward = 1 * delta
 		elif status == "died":
-			ai_controller.reward = -10
+			ai_controller.reward = -1
+		score += ai_controller.reward
 	else:
 		reset()
 
@@ -89,6 +81,8 @@ func reset():
 	$player.position.x = ProjectSettings.get_setting("display/window/size/viewport_width") / 2
 	$player.position.y = ProjectSettings.get_setting("display/window/size/viewport_height") / 2
 	$player.velocity = Vector2(0.0, 0.0)
+	
+	score = 0
 	
 #	ball = []
 #	for i in num_balls:
@@ -100,7 +94,8 @@ func reset():
 
 func check_died():
 	if $player.position.y > ProjectSettings.get_setting("display/window/size/viewport_height"):
-		print("died")
+		# print("died")
+		print("died, score: ", score)
 		status = "died"
 		game_over()
 		
